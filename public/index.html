@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prim's Algorithm Visualizer</title>
+
+  <!-- ‑‑ Fonts (same as home) ‑‑ -->
+  <style>
+    @font-face{
+      font-family:'Sequel100';
+      src:url('https://cdn.jsdelivr.net/gh/typologic/fonts/sequel/sequel-100-black.woff2') format('woff2');
+      font-weight:900;
+      font-style:normal;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Garet:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- vis‑network -->
+  <script src="lib/vis-network.min.js"></script>
+
+  <!-- ‑‑ Page styles ‑‑ -->
+  <style>
+    :root{
+      --bg-img:url('https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/19828495/verge_wp_repeat_00.0.jpg?_gl=1*1o9encw*_ga*MTg0MzgzNTE3My4xNzQ3NjY2ODMy*_ga_9GXHZT6RVE*czE3NDc2NjY4MzEkbzEkZzEkdDE3NDc2NjY4NjYkajI4JGwwJGgwJGR1TDItUW5Fcjh4VHhQR3cwcjNuS3FkYTgxZlItYlo2dlRB');
+    }
+
+    /* GLOBAL */
+    *,*::before,*::after{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Garet',sans-serif;
+      color:#fff;
+      min-height:100vh;
+      background:var(--bg-img) center/cover no-repeat fixed;
+    }
+
+    /* subtle dark overlay */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.4);  /* 40 % opacity */
+      pointer-events:none;
+      z-index:-1;
+    }
+
+    /* corner labels */
+    .corner{
+      position:fixed;
+      font-family:'Garet',sans-serif;
+      letter-spacing:1px;
+      font-size:.9rem;
+      text-shadow:0 2px 4px rgba(0,0,0,.7);
+    }
+    .top-left {top:20px;left:28px}
+    .top-right{top:20px;right:28px}
+
+    /* container */
+    .container{
+      max-width:1100px;
+      margin:auto;
+      padding:90px 20px 60px;
+      text-align:center;
+    }
+
+    /* title */
+    h1{
+      margin:0 0 40px;
+      font-family:'Sequel100','Anton',sans-serif;
+      font-size:clamp(2.4rem,6vw,4.8rem);
+      line-height:1.05;
+    }
+
+    /* ---- easy‑input form ---- */
+    .edge-form label{display:inline-block;margin:6px 10px}
+    .edge-form input{
+      width:70px;
+      margin-left:4px;
+      padding:6px 4px;
+      border-radius:6px;
+      border:none;
+    }
+    #add-edge{
+      margin-left:8px;
+      padding:8px 16px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+    }
+
+    /* edge list */
+    #edge-list{
+      background:rgba(0,0,0,.45);
+      padding:10px;
+      border-radius:10px;
+      max-height:120px;
+      overflow:auto;
+      margin:18px 0;
+      text-align:left;
+    }
+
+    /* run button */
+    .run-btn{
+      margin-top:18px;
+      padding:1rem 2.6rem;
+      font-size:1rem;
+      font-weight:700;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:#fff;
+      background:transparent;
+      border:3px solid #fff;
+      border-radius:40px;
+      cursor:pointer;
+      transition:background .3s,transform .3s;
+    }
+    .run-btn:hover{background:rgba(255,255,255,.25);transform:scale(1.05)}
+
+    /* output + graph */
+    #output{
+      margin-top:30px;
+      background:rgba(0,0,0,.45);
+      padding:16px;
+      border-radius:10px;
+      white-space:pre-wrap;
+    }
+    #graph{
+      margin-top:40px;
+      height:500px;
+      background:rgba(0,0,0,.45);
+      border-radius:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <!-- corner labels -->
+  <div class="corner top-left">DAA (Varsha)</div>
+  <div class="corner top-right">BMSCE</div>
+
+  <div class="container">
+    <h1>Prim's<br>Algorithm</h1>
+
+    <!-- easy input form -->
+    <div class="edge-form">
+      <label>
+        Vertices:
+        <input id="v-count" type="number" min="2" value="5">
+      </label>
+      <br>
+      <label>From:<input id="e-from" type="number" min="0"></label>
+      <label>To:<input id="e-to" type="number" min="0"></label>
+      <label>Weight:<input id="e-weight" type="number" min="1"></label>
+      <button id="add-edge">Add Edge</button>
+    </div>
+
+    <pre id="edge-list"><em>No edges yet…</em></pre>
+
+    <button class="run-btn" id="run-btn">Run Prim's Algorithm</button>
+
+    <pre id="output"></pre>
+    <div id="graph"></div>
+  </div>
+
+  <!-- logic -->
+  <script src="script.js"></script>
+</body>
+</html>
+<script>
+  /* If the page was reached by a browser RELOAD (type 1),
+     send the user to the home page instead. */
+  if (performance.navigation.type === 1) {
+    location.replace('home.html');
+  }
+</script>
