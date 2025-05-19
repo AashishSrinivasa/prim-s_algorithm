@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prim's Algorithm Visualizer</title>
+  <style>
+    @font-face {
+      font-family: 'Sequel100';
+      src: url('https://cdn.jsdelivr.net/gh/typologic/fonts/sequel/sequel-100-black.woff2') format('woff2');
+      font-weight: 900;
+      font-style: normal;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Garet', sans-serif;
+      color: white;
+      min-height: 100vh;
+      background: url('https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/19828495/verge_wp_repeat_00.0.jpg') center/cover no-repeat fixed;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: -1;
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 90px 20px 60px;
+      text-align: center;
+    }
+    
+    h1 {
+      font-family: 'Sequel100', 'Anton', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      margin: 0 0 40px;
+      line-height: 1.05;
+    }
+    
+    .edge-form label {
+      display: inline-block;
+      margin: 6px 10px;
+    }
+    
+    .edge-form input {
+      width: 70px;
+      margin-left: 4px;
+      padding: 6px 4px;
+      border-radius: 6px;
+      border: none;
+    }
+    
+    #add-edge {
+      margin-left: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    
+    #edge-list {
+      background: rgba(0,0,0,0.45);
+      padding: 10px;
+      border-radius: 10px;
+      max-height: 120px;
+      overflow: auto;
+      margin: 18px 0;
+      text-align: left;
+    }
+    
+    .run-btn {
+      margin-top: 18px;
+      padding: 1rem 2.6rem;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #fff;
+      background: transparent;
+      border: 3px solid #fff;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: background .3s, transform .3s;
+    }
+    
+    .run-btn:hover {
+      background: rgba(255,255,255,0.25);
+      transform: scale(1.05);
+    }
+    
+    #output {
+      margin-top: 30px;
+      background: rgba(0,0,0,0.45);
+      padding: 16px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+    }
+    
+    #graph {
+      margin-top: 40px;
+      height: 500px;
+      background: rgba(0,0,0,0.45);
+      border-radius: 10px;
+    }
+    
+    .corner {
+      position: fixed;
+      font-family: 'Garet', sans-serif;
+      letter-spacing: 1px;
+      font-size: .9rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,.7);
+    }
+    
+    .top-left {
+      top: 20px;
+      left: 28px;
+    }
+    
+    .top-right {
+      top: 20px;
+      right: 28px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Garet:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+  <div class="corner top-left">DAA (Varsha)</div>
+  <div class="corner top-right">BMSCE</div>
+
+  <div class="container">
+    <h1>Prim's<br>Algorithm</h1>
+
+    <div class="edge-form">
+      <label>
+        Vertices:
+        <input id="v-count" type="number" min="2" value="5">
+      </label>
+      <br>
+      <label>From:<input id="e-from" type="number" min="0"></label>
+      <label>To:<input id="e-to" type="number" min="0"></label>
+      <label>Weight:<input id="e-weight" type="number" min="1"></label>
+      <button id="add-edge">Add Edge</button>
+    </div>
+
+    <pre id="edge-list"><em>No edges yet…</em></pre>
+
+    <button class="run-btn" id="run-btn">Run Prim's Algorithm</button>
+
+    <pre id="output"></pre>
+    <div id="graph"></div>
+  </div>
+
+  <script>
+    // DOM elements
+    const vCountInput = document.getElementById('v-count');
+    const fromInput = document.getElementById('e-from');
+    const toInput = document.getElementById('e-to');
+    const wInput = document.getElementById('e-weight');
+    const addBtn = document.getElementById('add-edge');
+    const runBtn = document.getElementById('run-btn');
+    const edgePre = document.getElementById('edge-list');
+    const outputPre = document.getElementById('output');
+    const graphDiv = document.getElementById('graph');
+
+    let edges = []; // Store all edges
+
+    // Add edge button click handler
+    addBtn.addEventListener('click', () => {
+      const v = parseInt(vCountInput.value);
+      const f = parseInt(fromInput.value);
+      const t = parseInt(toInput.value);
+      const w = parseInt(wInput.value);
+
+      // Validate inputs
+      if (isNaN(f)) {
+        alert('"From" must be a number');
+        return;
+      }
+      if (isNaN(t)) {
+        alert('"To" must be a number');
+        return;
+      }
+      if (isNaN(w) || w <= 0) {
+        alert('Weight must be a positive number');
+        return;
+      }
+      if (f < 0 || t < 0 || f >= v || t >= v) {
+        alert(`Vertices must be between 0 and ${v-1}`);
+        return;
+      }
+      if (f === t) {
+        alert('Cannot create edge from a vertex to itself');
+        return;
+      }
+
+      // Add edge and update display
+      edges.push({from: f, to: t, weight: w});
+      renderEdgeList();
+      
+      // Clear input fields
+      fromInput.value = '';
+      toInput.value = '';
+      wInput.value = '';
+    });
+
+    // Run Prim's algorithm
+    runBtn.addEventListener('click', () => {
+      const v = parseInt(vCountInput.value);
+      if (v < 2) {
+        alert('Need at least 2 vertices');
+        return;
+      }
+      if (edges.length === 0) {
+        alert('Add at least one edge');
+        return;
+      }
+
+      // Build adjacency matrix
+      const matrix = Array.from({length: v}, () => Array(v).fill(0));
+      edges.forEach(e => {
+        matrix[e.from][e.to] = e.weight;
+        matrix[e.to][e.from] = e.weight; // Undirected graph
+      });
+
+      // Run Prim's algorithm (client-side implementation)
+      const mst = primMST(matrix);
+      outputPre.textContent = JSON.stringify(mst, null, 2);
+      drawGraph(mst, v);
+    });
+
+    // Prim's algorithm implementation
+    function primMST(graph) {
+      const V = graph.length;
+      const parent = new Array(V);
+      const key = new Array(V);
+      const mstSet = new Array(V);
+
+      // Initialize all keys as INFINITE and mstSet as false
+      for (let i = 0; i < V; i++) {
+        key[i] = Infinity;
+        mstSet[i] = false;
+      }
+
+      // Always include first vertex in MST
+      key[0] = 0;
+      parent[0] = -1; // First node is always root of MST
+
+      for (let count = 0; count < V - 1; count++) {
+        // Pick the minimum key vertex from the set of vertices not yet included in MST
+        let u = minKey(key, mstSet, V);
+        mstSet[u] = true;
+
+        // Update key value and parent index of the adjacent vertices
+        for (let v = 0; v < V; v++) {
+          if (graph[u][v] && !mstSet[v] && graph[u][v] < key[v]) {
+            parent[v] = u;
+            key[v] = graph[u][v];
+          }
+        }
+      }
+
+      // Format the result as an array of edges
+      const result = [];
+      for (let i = 1; i < V; i++) {
+        if (parent[i] !== undefined && graph[i][parent[i]] !== 0) {
+          result.push({
+            from: parent[i],
+            to: i,
+            weight: graph[i][parent[i]]
+          });
+        }
+      }
+      return result;
+    }
+
+    function minKey(key, mstSet, V) {
+      let min = Infinity;
+      let minIndex = -1;
+
+      for (let v = 0; v < V; v++) {
+        if (!mstSet[v] && key[v] < min) {
+          min = key[v];
+          minIndex = v;
+        }
+      }
+      return minIndex;
+    }
+
+    // Display edges
+    function renderEdgeList() {
+      if (edges.length === 0) {
+        edgePre.innerHTML = '<em>No edges yet...</em>';
+      } else {
+        edgePre.textContent = edges.map(
+          (e, i) => `${i+1}.  ${e.from}  —${e.weight}→  ${e.to}`
+        ).join('\n');
+      }
+    }
+
+    // Draw graph using vis-network
+    function drawGraph(mstEdges, nodeCount) {
+      const nodes = new vis.DataSet(
+        Array.from({length: nodeCount}, (_, i) => ({id: i, label: `${i}`}))
+      );
+      const visEdges = new vis.DataSet(
+        mstEdges.map(e => ({
+          from: e.from,
+          to: e.to,
+          label: `${e.weight}`,
+          font: {align: 'middle'},
+          color: {color: '#ffeb3b'},
+          width: 2
+        }))
+      );
+      graphDiv.innerHTML = '';
+      new vis.Network(graphDiv, {nodes, edges: visEdges}, {
+        edges: {smooth: {type: 'dynamic'}},
+        physics: {stabilization: true}
+      });
+    }
+  </script>
+</body>
+</html>
